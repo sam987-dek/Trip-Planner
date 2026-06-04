@@ -37,6 +37,7 @@ function stripMarkdown(text: string): string {
 function parseActivityText(activityText: string) {
   let title = ''
   let description = ''
+  let tag = ''
 
   const boldMatch = activityText.match(/^\*\*([^*]+)\*\*[:.-]?\s*(.*)/)
   if (boldMatch) {
@@ -53,9 +54,17 @@ function parseActivityText(activityText: string) {
     }
   }
 
+  // Extract [Tag] from title if present
+  const tagMatch = title.match(/^\[(.*?)\]\s*(.*)/)
+  if (tagMatch) {
+    tag = tagMatch[1].trim()
+    title = tagMatch[2].trim()
+  }
+
   return {
     title: stripMarkdown(title),
-    description: stripMarkdown(description)
+    description: stripMarkdown(description),
+    tag: tag
   }
 }
 
@@ -255,23 +264,33 @@ interface DayData {
   activities: string[]
 }
 
-function parseItineraryIntoDays(text: string): DayData[] {
+function parseItinerary(text: string): { days: DayData[], budgetLines: string[] } {
   const lines = text.split('\n')
   const days: DayData[] = []
+  const budgetLines: string[] = []
   let currentDay: DayData | null = null
+  let inBudgetSection = false
 
   for (const rawLine of lines) {
     const line = rawLine.trim()
     if (!line) continue
 
+    // Detect Budget Section
+    if (line.match(/^#{2,4}\s*Trip Budget Estimate/i)) {
+      inBudgetSection = true
+      continue
+    }
+
+    if (inBudgetSection) {
+      if (line.match(/^(?:#{1,4}\s*)?(?:\*{1,2}\s*)?Day\s+(\d+)/i)) {
+        inBudgetSection = false // Left budget section
+      } else {
+        budgetLines.push(line.replace(/^[-*]\s*/, '').replace(/\*\*/g, '').trim())
+        continue
+      }
+    }
+
     // ── Strict day-heading detection ──────────────────────────────────────────
-    // Only match lines that TRULY start a new day section:
-    //   "## Day 1: Title"      → markdown heading
-    //   "## **Day 1**: Title"  → bold heading
-    //   "Day 1: Title"         → plain (no ##) — only at line start, followed by colon/dash
-    // We explicitly require the line to begin with optional # characters,
-    // then "Day" as the first real word, then a digit.
-    // This prevents matching bullet text like "* Spend a day at the market"
     const dayMatch = line.match(/^(?:#{1,4}\s*)?(?:\*{1,2}\s*)?Day\s+(\d+)\s*(?:\*{1,2})?\s*[:–—-]\s*(.*)/i)
     if (dayMatch) {
       const dayNum = parseInt(dayMatch[1], 10)
@@ -290,7 +309,7 @@ function parseItineraryIntoDays(text: string): DayData[] {
       if (line.startsWith('* ') || line.startsWith('- ')) {
         currentDay.activities.push(line.replace(/^[-*]\s*/, '').trim())
       } else if (!line.startsWith('#')) {
-        // Append to intro paragraph, but cap length so it doesn't swallow activities
+        // Append to intro paragraph
         if ((currentDay.intro?.length ?? 0) < 600) {
           if (currentDay.intro) {
             currentDay.intro += ' ' + line
@@ -314,7 +333,7 @@ function parseItineraryIntoDays(text: string): DayData[] {
   }
 
   // Fallback: if the parser found nothing, treat the whole text as one day
-  if (days.length === 0) {
+  if (days.length === 0 && budgetLines.length === 0) {
     const allActivities = lines
       .filter(l => l.trim().startsWith('* ') || l.trim().startsWith('- '))
       .map(l => l.replace(/^[-*]\s*/, '').trim())
@@ -332,7 +351,7 @@ function parseItineraryIntoDays(text: string): DayData[] {
     if (d.title) d.title = stripMarkdown(d.title)
   }
 
-  return days
+  return { days, budgetLines }
 }
 
 // Helper to map mood to descriptive emoji and text
@@ -456,8 +475,7 @@ export default function AIResults() {
 
   if (!data) return <div className="text-center py-20 text-slate-500">No results found. Create a trip first.</div>
 
-  const itineraryText = getItineraryText(data)
-  const parsedDays = parseItineraryIntoDays(itineraryText)
+  const { days: parsedDays, budgetLines } = data ? parseItinerary(getItineraryText(data)) : { days: [], budgetLines: [] }
   const activeDay = parsedDays[activeDayIndex] || parsedDays[0]
   
   // Calculate active day calendar date
@@ -510,7 +528,7 @@ export default function AIResults() {
         const { error: itinError } = await supabase.from('itineraries').insert({
           id: itineraryId,
           trip_id: tripId,
-          content: { text: itineraryText }
+          content: { text: getItineraryText(data) }
         })
 
         if (itinError) throw new Error(itinError.message)
@@ -523,7 +541,7 @@ export default function AIResults() {
           id: Date.now(),
           destination: destination || 'AI itinerary',
           createdAt: new Date().toISOString(),
-          text: itineraryText
+          text: getItineraryText(data)
         }
 
         localStorage.setItem('tripease_saved_trips', JSON.stringify([trip, ...trips].slice(0, 20)))
@@ -542,7 +560,7 @@ export default function AIResults() {
           id: Date.now(),
           destination: destination || 'AI itinerary',
           createdAt: new Date().toISOString(),
-          text: itineraryText
+          text: getItineraryText(data)
         }
 
         localStorage.setItem('tripease_saved_trips', JSON.stringify([trip, ...trips].slice(0, 20)))
@@ -697,7 +715,7 @@ export default function AIResults() {
             <div className="space-y-6">
               {activeDay.activities.length > 0 ? (
                 activeDay.activities.map((act, index) => {
-                  const { title, description } = parseActivityText(act)
+                  const { title, description, tag } = parseActivityText(act)
                   return (
                     <article
                       key={index}
@@ -714,7 +732,7 @@ export default function AIResults() {
                         <SuggestionImage text={title} destination={destination} />
                         <div className="space-y-2">
                           <span className="inline-flex items-center gap-1 rounded-full bg-sky-100/60 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 px-2.5 py-0.5 text-xs font-semibold">
-                            📍 Stop {index + 1}
+                            {tag ? `🍽️ ${tag}` : `📍 Stop ${index + 1}`}
                           </span>
                           <h4 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-sky-500 transition">
                             {title}
@@ -759,6 +777,25 @@ export default function AIResults() {
 
         {/* Right Column: Daily Weather Forecast & Advice */}
         <div className="space-y-6">
+
+          {budgetLines && budgetLines.length > 0 && (
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-950">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
+                  💰
+                </span>
+                Budget Estimate
+              </h3>
+              <ul className="space-y-3">
+                {budgetLines.map((line, idx) => (
+                  <li key={idx} className="flex items-start text-sm text-slate-600 dark:text-slate-400">
+                    <span className="mr-2 mt-0.5 text-emerald-500">•</span>
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           
           {weatherLoading && (
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-950 flex items-center justify-center min-h-[200px]">

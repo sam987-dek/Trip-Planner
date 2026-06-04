@@ -16,7 +16,7 @@ export default function CreateTrip() {
   const [error, setError] = useState<string | null>(null)
   const [location, setLocation] = useState('')
   const [dates, setDates] = useState('3')
-  const [budget, setBudget] = useState('moderate')
+  const [budget, setBudget] = useState('₹10000')
   const [mood, setMood] = useState('relaxed')
   const [travelerType, setTravelerType] = useState('solo')
   const [diet, setDiet] = useState('any')
@@ -193,26 +193,32 @@ export default function CreateTrip() {
       const prompt = `Create a ${numDays}-day trip itinerary for ${finalLocation} starting on ${startDate}.
 The traveler type is ${travelerType} and the trip mood is ${mood}.
 The traveler's dietary preference is: ${dietText}.
-The budget is: ${budget}.
+The total budget is: ${budget}.
 
 IMPORTANT FORMATTING RULES — follow exactly:
 1. You MUST generate exactly ${numDays} days. No more, no less.
 2. Each day MUST start with a heading on its own line in this exact format: "## Day X: [Descriptive Title]" where X is the day number (1, 2, 3…).
 3. After the heading, write a short 1-2 sentence summary paragraph for that day.
 4. Then list 5-7 activities/stops as bullet points starting with "* " (asterisk + space).
-5. Each bullet point MUST start with the specific place name in bold: "* **Place Name**: description"
+5. Each bullet point MUST start with the specific place name in bold, and MUST include a category tag in square brackets BEFORE the place name: "* **[Tag] Place Name**: description". Valid tags are: [Breakfast], [Lunch], [Dinner], [Snack], [Activity], [Transport], [Accommodation].
 6. You MUST explicitly include recommendations for Breakfast, Lunch, and Dinner every single day.
 7. For meals, recommend famous, authentic, "desi" (if applicable) local restaurants. DO NOT recommend big, fancy, or generic restaurant chains that lack good taste. Stay within the ${budget} budget.
 8. Do NOT skip any day. Do NOT combine multiple days into one section.
 9. Do NOT use the word "Day" inside bullet point descriptions — only use it in the ## Day X headings.
+10. At the very end of the itinerary, add a final section starting exactly with "## Trip Budget Estimate". Provide a rough estimated cost breakdown in local currency for travelling/transportation, food, and activities based on the ${budget} total budget.
 
 Example format (use this exact structure):
 ## Day 1: Arrival and Old Town
 Begin your journey in the historic quarter with local flavours and iconic sights.
-* **Famous Desi Dhaba**: Start the day with an authentic local breakfast.
-* **Landmark Square**: Stroll through the main square and soak in the atmosphere.
-* **Local Spice Market**: Sample local snacks at the bustling market.
-* **Hidden Gem Eatery**: Enjoy a famous local lunch.
+* **[Breakfast] Famous Desi Dhaba**: Start the day with an authentic local breakfast.
+* **[Activity] Landmark Square**: Stroll through the main square and soak in the atmosphere.
+* **[Snack] Local Spice Market**: Sample local snacks at the bustling market.
+* **[Lunch] Hidden Gem Eatery**: Enjoy a famous local lunch.
+
+## Trip Budget Estimate
+* **Transportation**: $50
+* **Food**: $150
+* **Activities**: $100
 
 Now generate the full ${numDays}-day itinerary for ${finalLocation}, tailored for ${travelerType} with a ${mood} mood. Dietary preference: ${dietText}. Budget: ${budget}.`
 
@@ -381,16 +387,14 @@ Now generate the full ${numDays}-day itinerary for ${finalLocation}, tailored fo
                 </select>
               </label>
               <label className="space-y-2 text-sm text-slate-700 dark:text-slate-300 relative z-0">
-                <span>Trip Budget</span>
-                <select
+                <span>Trip Budget (Approximate)</span>
+                <input
+                  type="text"
+                  placeholder="e.g. $500, ₹10000"
                   value={budget}
                   onChange={(e) => setBudget(e.target.value)}
                   className="w-full rounded-3xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-800/40 relative z-0"
-                >
-                  <option value="budget">Budget-Friendly 💸</option>
-                  <option value="moderate">Moderate / Mid-range 💵</option>
-                  <option value="luxury">Luxury / Premium 💎</option>
-                </select>
+                />
               </label>
             </div>
           </div>
