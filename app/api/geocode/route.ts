@@ -17,6 +17,7 @@ export async function GET(req: Request) {
     const params = new URLSearchParams({
       text: q,
       limit: '15',
+      type: 'locality',
       apiKey
     })
 
