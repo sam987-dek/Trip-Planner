@@ -16,6 +16,7 @@ export default function CreateTrip() {
   const [error, setError] = useState<string | null>(null)
   const [location, setLocation] = useState('')
   const [dates, setDates] = useState('3')
+  const [budget, setBudget] = useState('moderate')
   const [mood, setMood] = useState('relaxed')
   const [travelerType, setTravelerType] = useState('solo')
   const [diet, setDiet] = useState('any')
@@ -192,6 +193,7 @@ export default function CreateTrip() {
       const prompt = `Create a ${numDays}-day trip itinerary for ${finalLocation} starting on ${startDate}.
 The traveler type is ${travelerType} and the trip mood is ${mood}.
 The traveler's dietary preference is: ${dietText}.
+The budget is: ${budget}.
 
 IMPORTANT FORMATTING RULES — follow exactly:
 1. You MUST generate exactly ${numDays} days. No more, no less.
@@ -199,20 +201,20 @@ IMPORTANT FORMATTING RULES — follow exactly:
 3. After the heading, write a short 1-2 sentence summary paragraph for that day.
 4. Then list 5-7 activities/stops as bullet points starting with "* " (asterisk + space).
 5. Each bullet point MUST start with the specific place name in bold: "* **Place Name**: description"
-6. Do NOT skip any day. Do NOT combine multiple days into one section.
-7. Do NOT use the word "Day" inside bullet point descriptions — only use it in the ## Day X headings.
+6. You MUST explicitly include recommendations for Breakfast, Lunch, and Dinner every single day.
+7. For meals, recommend famous, authentic, "desi" (if applicable) local restaurants. DO NOT recommend big, fancy, or generic restaurant chains that lack good taste. Stay within the ${budget} budget.
+8. Do NOT skip any day. Do NOT combine multiple days into one section.
+9. Do NOT use the word "Day" inside bullet point descriptions — only use it in the ## Day X headings.
 
 Example format (use this exact structure):
 ## Day 1: Arrival and Old Town
 Begin your journey in the historic quarter with local flavours and iconic sights.
+* **Famous Desi Dhaba**: Start the day with an authentic local breakfast.
 * **Landmark Square**: Stroll through the main square and soak in the atmosphere.
-* **Street Food Market**: Sample local snacks at the bustling market.
+* **Local Spice Market**: Sample local snacks at the bustling market.
+* **Hidden Gem Eatery**: Enjoy a famous local lunch.
 
-## Day 2: Nature and Exploration
-Head out of the city for scenic vistas and hidden trails.
-* **Viewpoint Hill**: Hike to the top for panoramic city views.
-
-Now generate the full ${numDays}-day itinerary for ${finalLocation}, tailored for ${travelerType} with a ${mood} mood. Dietary preference: ${dietText}.`
+Now generate the full ${numDays}-day itinerary for ${finalLocation}, tailored for ${travelerType} with a ${mood} mood. Dietary preference: ${dietText}. Budget: ${budget}.`
 
       const res = await fetch('/api/ai/generate', {
         method: 'POST',
@@ -231,6 +233,7 @@ Now generate the full ${numDays}-day itinerary for ${finalLocation}, tailored fo
       sessionStorage.setItem('tripease_diet', diet)
       sessionStorage.setItem('tripease_start_date', startDate)
       sessionStorage.setItem('tripease_dates_type', dates)
+      sessionStorage.setItem('tripease_budget', budget)
 
       if (finalCoords) {
         sessionStorage.setItem('tripease_coords', JSON.stringify(finalCoords))
@@ -375,6 +378,18 @@ Now generate the full ${numDays}-day itinerary for ${finalLocation}, tailored fo
                   <option value="any">Both / Any 🍽️</option>
                   <option value="veg">Vegetarian 🥦</option>
                   <option value="non-veg">Non-Vegetarian 🍗</option>
+                </select>
+              </label>
+              <label className="space-y-2 text-sm text-slate-700 dark:text-slate-300 relative z-0">
+                <span>Trip Budget</span>
+                <select
+                  value={budget}
+                  onChange={(e) => setBudget(e.target.value)}
+                  className="w-full rounded-3xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-800/40 relative z-0"
+                >
+                  <option value="budget">Budget-Friendly 💸</option>
+                  <option value="moderate">Moderate / Mid-range 💵</option>
+                  <option value="luxury">Luxury / Premium 💎</option>
                 </select>
               </label>
             </div>
