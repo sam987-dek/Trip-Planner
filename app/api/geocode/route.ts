@@ -45,7 +45,13 @@ export async function GET(req: Request) {
       })
     }
 
-    return NextResponse.json({ ok: true, data })
+    const headers = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
+
+    return NextResponse.json({ ok: true, data }, { headers })
   } catch (error: any) {
     return NextResponse.json({ ok: false, error: error?.message || 'geocode failed' }, { status: 500 })
   }

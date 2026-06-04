@@ -58,7 +58,7 @@ export default function CreateTrip() {
     setShowDropdown(true)
 
     try {
-      const url = `/api/geocode?q=${encodeURIComponent(trimmedQuery)}`
+      const url = `/api/geocode?q=${encodeURIComponent(trimmedQuery)}&t=${Date.now()}`
       
       const response = await fetch(url)
 
