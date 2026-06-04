@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url)
@@ -21,7 +23,9 @@ export async function GET(req: Request) {
       apiKey
     })
 
-    const response = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?${params.toString()}`)
+    const response = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?${params.toString()}`, {
+      cache: 'no-store'
+    })
     const data = await response.json()
 
     if (!response.ok) {
