@@ -15,7 +15,7 @@ export default function CreateTrip() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [location, setLocation] = useState('')
-  const [dates, setDates] = useState('weekend')
+  const [dates, setDates] = useState('3')
   const [mood, setMood] = useState('relaxed')
   const [travelerType, setTravelerType] = useState('solo')
   const [diet, setDiet] = useState('any')
@@ -186,8 +186,8 @@ export default function CreateTrip() {
     try {
       const dietText = diet === 'veg' ? 'Vegetarian ONLY (only vegetarian restaurants, cafes, and street food)' : diet === 'non-veg' ? 'Non-Vegetarian (famous local meats/poultry spots)' : 'Mixed/Any dining options'
 
-      // Derive exact number of days from the dates selector
-      const numDays = dates === 'weekend' ? 2 : dates === '3-day' ? 3 : dates === '7-day' ? 7 : 2
+      // Derive exact number of days from the dates input
+      const numDays = Math.min(Math.max(parseInt(dates, 10) || 3, 1), 15)
 
       const prompt = `Create a ${numDays}-day trip itinerary for ${finalLocation} starting on ${startDate}.
 The traveler type is ${travelerType} and the trip mood is ${mood}.
@@ -326,11 +326,14 @@ Now generate the full ${numDays}-day itinerary for ${finalLocation}, tailored fo
               </label>
               <label className="space-y-2 text-sm text-slate-700 dark:text-slate-300 relative z-0">
                 <span>Trip Duration</span>
-                <select value={dates} onChange={(e) => setDates(e.target.value)} className="w-full rounded-3xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-800/40 relative z-0">
-                  <option value="weekend">Weekend trip (2 days)</option>
-                  <option value="3-day">3-day trip</option>
-                  <option value="7-day">7-day trip</option>
-                </select>
+                <input 
+                  type="number" 
+                  min="1" 
+                  max="15" 
+                  value={dates} 
+                  onChange={(e) => setDates(e.target.value)} 
+                  className="w-full rounded-3xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-800/40 relative z-0" 
+                />
               </label>
             </div>
             <div className="grid gap-5 md:grid-cols-3">

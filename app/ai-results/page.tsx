@@ -384,7 +384,7 @@ export default function AIResults() {
   const [travelerType, setTravelerType] = useState('solo')
   const [diet, setDiet] = useState('any')
   const [startDate, setStartDate] = useState('')
-  const [datesType, setDatesType] = useState('weekend')
+  const [datesType, setDatesType] = useState('3')
   const [activeDayIndex, setActiveDayIndex] = useState(0)
 
   const [weatherData, setWeatherData] = useState<any>(null)
@@ -440,7 +440,7 @@ export default function AIResults() {
         lon: String(coords.lon),
         destination: destination,
         startDate: startDate || new Date().toISOString().split('T')[0],
-        duration: datesType || 'weekend'
+        duration: (datesType || '3') + ' Days'
       })
       fetch(`/api/weather?${queryParams.toString()}`)
         .then((res) => res.json())
@@ -590,7 +590,7 @@ export default function AIResults() {
                 ✨ Custom AI Itinerary
               </span>
               <span className="rounded-full bg-emerald-500/10 border border-emerald-400/20 px-3 py-1 backdrop-blur-md capitalize">
-                ⏱️ {datesType.replace('-', ' ')}
+                ⏱️ {datesType} Days
               </span>
             </div>
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white">{destination}</h1>
