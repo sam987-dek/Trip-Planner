@@ -1,0 +1,34 @@
+import { NextResponse } from 'next/server'
+
+export async function GET(req: Request) {
+  try {
+    const url = new URL(req.url)
+    const q = url.searchParams.get('q')?.trim()
+
+    if (!q) {
+      return NextResponse.json({ ok: false, error: 'q required' }, { status: 400 })
+    }
+
+    const apiKey = process.env.GEOAPIFY_API_KEY || process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY
+    if (!apiKey) {
+      return NextResponse.json({ ok: false, error: 'Geoapify API key is not configured' }, { status: 500 })
+    }
+
+    const params = new URLSearchParams({
+      text: q,
+      limit: '15',
+      apiKey
+    })
+
+    const response = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?${params.toString()}`)
+    const data = await response.json()
+
+    if (!response.ok) {
+      return NextResponse.json({ ok: false, error: data?.message || 'geocode failed' }, { status: response.status })
+    }
+
+    return NextResponse.json({ ok: true, data })
+  } catch (error: any) {
+    return NextResponse.json({ ok: false, error: error?.message || 'geocode failed' }, { status: 500 })
+  }
+}
