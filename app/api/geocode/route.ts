@@ -27,6 +27,19 @@ export async function GET(req: Request) {
       return NextResponse.json({ ok: false, error: data?.message || 'geocode failed' }, { status: response.status })
     }
 
+    // Filter out shops, streets, buildings, etc.
+    // We only want: country, state, county, city, town, village, municipality, district, suburb, island
+    const allowedTypes = [
+      'country', 'state', 'county', 'city', 'town', 'village',
+      'municipality', 'district', 'suburb', 'island'
+    ]
+
+    if (data.features) {
+      data.features = data.features.filter((f: any) => {
+        return allowedTypes.includes(f.properties?.result_type)
+      })
+    }
+
     return NextResponse.json({ ok: true, data })
   } catch (error: any) {
     return NextResponse.json({ ok: false, error: error?.message || 'geocode failed' }, { status: 500 })
