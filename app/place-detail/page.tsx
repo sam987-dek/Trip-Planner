@@ -97,13 +97,19 @@ function getReachAdvice(title: string, destination: string, mood: string) {
   return baseAdvice + `Ridesharing apps, local cabs, or auto-rickshaws are the most efficient ways to travel. Plan ~15-20 minutes travel time.`
 }
 
-// ─── Cost Estimate Hook ───────────────────────────────────────────────────────
+// ─── Cost Estimate Card ───────────────────────────────────────────────────────
+interface CostItem {
+  name: string
+  price: number
+}
+
 interface CostEstimate {
-  estimatedAmount: number
+  placeType: string
+  items: CostItem[]
+  totalAmount: number
   currency: string
-  breakdown: string
-  bufferApplied: number
   confidence: string
+  bufferApplied: number
 }
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
@@ -217,42 +223,82 @@ function CostEstimateCard({
       .finally(() => setLoading(false))
   }, [placeName, destination, tag, description])
 
-  const confidenceColor = estimate?.confidence === 'high' ? 'text-emerald-500' : estimate?.confidence === 'medium' ? 'text-yellow-500' : 'text-slate-400'
+  const confidenceColor = estimate?.confidence === 'high'
+    ? 'text-emerald-600 dark:text-emerald-400'
+    : estimate?.confidence === 'medium'
+    ? 'text-yellow-600 dark:text-yellow-400'
+    : 'text-slate-400'
+
+  const confidenceLabel = estimate?.confidence === 'high'
+    ? '✅ Price verified from known menu'
+    : estimate?.confidence === 'medium'
+    ? '⚡ Estimated from similar places'
+    : '⚠️ Rough estimate'
 
   return (
-    <div className={`rounded-2xl border ${tagConfig.border} ${tagConfig.bg} p-5 space-y-3`}>
-      <div className="flex items-center justify-between">
+    <div className={`rounded-2xl border ${tagConfig.border} ${tagConfig.bg} p-5 space-y-4`}>
+      {/* Header */}
+      <div className="flex items-start justify-between gap-2">
         <h3 className={`text-xs font-bold uppercase tracking-wider ${tagConfig.text}`}>
-          {tagConfig.emoji} Estimated Cost — Real Price Check
+          {tagConfig.emoji} Estimated Cost Breakdown
         </h3>
         {estimate && (
-          <span className={`text-[10px] font-bold uppercase ${confidenceColor}`}>
-            {estimate.confidence === 'high' ? '✅ High confidence' : estimate.confidence === 'medium' ? '⚡ Medium confidence' : '⚠️ Rough estimate'}
+          <span className={`text-[10px] font-semibold ${confidenceColor} text-right`}>
+            {confidenceLabel}
           </span>
         )}
       </div>
 
+      {/* Place type label */}
+      {estimate?.placeType && (
+        <p className="text-[11px] text-slate-500 dark:text-slate-400 italic capitalize">
+          📌 {estimate.placeType}
+        </p>
+      )}
+
+      {/* Loading */}
       {loading && (
         <div className="flex items-center gap-3 py-2">
-          <div className="h-5 w-5 rounded-full border-2 border-current border-t-transparent animate-spin opacity-60" />
+          <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin opacity-60" />
           <span className="text-xs text-slate-500 dark:text-slate-400">Checking menu prices and fees…</span>
         </div>
       )}
 
-      {!loading && estimate && (
-        <>
-          <p className={`text-3xl font-extrabold tracking-tight ${tagConfig.text}`}>
-            ₹{estimate.estimatedAmount.toLocaleString('en-IN')}
-          </p>
-          {estimate.breakdown && (
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-5">
-              {estimate.breakdown}
-            </p>
-          )}
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 italic">
-            Includes ₹{estimate.bufferApplied} buffer for misc. expenses
-          </p>
-        </>
+      {/* Receipt-style itemized list */}
+      {!loading && estimate?.items && estimate.items.length > 0 && (
+        <div className="space-y-0 rounded-xl overflow-hidden border border-current/10">
+          {estimate.items.map((item, i) => {
+            const isBuffer = item.name.toLowerCase().includes('buffer') || item.name.toLowerCase().includes('misc')
+            return (
+              <div
+                key={i}
+                className={`flex items-center justify-between px-3 py-2 text-sm
+                  ${isBuffer
+                    ? 'bg-slate-100/60 dark:bg-slate-800/40 border-t border-current/10'
+                    : i % 2 === 0
+                    ? 'bg-white/60 dark:bg-slate-900/40'
+                    : 'bg-white/30 dark:bg-slate-900/20'
+                  }`}
+              >
+                <span className={`${isBuffer ? 'text-slate-400 dark:text-slate-500 text-xs italic' : 'text-slate-700 dark:text-slate-300 font-medium'}`}>
+                  {isBuffer ? '+ ' : ''}{item.name}
+                </span>
+                <span className={`font-bold tabular-nums ${isBuffer ? 'text-slate-400 dark:text-slate-500 text-xs' : tagConfig.text}`}>
+                  ₹{item.price}
+                </span>
+              </div>
+            )
+          })}
+          {/* Total row */}
+          <div className={`flex items-center justify-between px-3 py-3 ${tagConfig.bg} border-t-2 ${tagConfig.border}`}>
+            <span className={`text-sm font-extrabold uppercase tracking-wide ${tagConfig.text}`}>
+              Total (1 person)
+            </span>
+            <span className={`text-xl font-extrabold tabular-nums ${tagConfig.text}`}>
+              ₹{estimate.totalAmount.toLocaleString('en-IN')}
+            </span>
+          </div>
+        </div>
       )}
 
       {!loading && error && (
@@ -261,6 +307,7 @@ function CostEstimateCard({
     </div>
   )
 }
+
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function PlaceDetail() {

@@ -16,30 +16,53 @@ export async function POST(req: Request) {
     }
 
     const isFood = ['Breakfast', 'Lunch', 'Dinner', 'Snack'].includes(tag)
-    const systemPrompt = `You are a precise local cost estimator with deep knowledge of restaurant menus, entry fees, and transport fares across Indian and global cities. You always return accurate, research-based price estimates.`
+
+    const systemPrompt = `You are a hyperlocal India travel cost expert with deep knowledge of actual restaurant menu prices, street food rates, entry fees, and transport fares across Indian cities. You are known for being extremely accurate and granular — you think like a local who has eaten at these exact places and knows their exact menu prices. Never round up unnecessarily. Famous budget local eateries in India (like Udupi joints, dhabas, street stalls) are CHEAP — a full breakfast might cost ₹50-120 total, not hundreds. Be honest about the price level of each place.`
 
     const userPrompt = isFood
-      ? `Estimate the cost in Indian Rupees (INR) for one person eating at "${placeName}" in ${destination}.
-The recommended item/context is: "${description}".
-This is a ${tag} stop.
+      ? `Give me an itemized cost estimate for eating at "${placeName}" in ${destination} for ONE person.
+The recommended context is: "${description}"
+Meal type: ${tag}
 
-Instructions:
-- Use your knowledge of this specific restaurant's actual menu prices if you know them.
-- If it is a famous desi/local eatery, use typical prices for that style of restaurant.
-- Pick the most likely dishes a traveler would order for ${tag} (e.g. for Breakfast: 2 items + tea/coffee).
-- Output ONLY a JSON object with this exact format, no markdown, no explanation:
-{"estimatedAmount": 350, "currency": "INR", "breakdown": "Masala dosa ₹120 + Filter coffee ₹60 + service ₹20 + ₹100 buffer", "confidence": "high"}`
-      : `Estimate the cost in Indian Rupees (INR) for one person for "${placeName}" in ${destination}.
-Context/description: "${description}".
-Category: ${tag}.
+Think carefully:
+1. What TYPE of place is this? (street stall / budget Udupi / casual dhaba / mid-range restaurant / fine dining)
+2. Based on that, what are realistic menu prices at this specific place?
+3. List 2-4 specific items a person would order for this ${tag}, with ACTUAL realistic prices for this specific restaurant.
+4. Add ₹100 as a buffer for misc (water, tip, etc).
 
-Instructions:
-- For Activity: include entry ticket + any guide fee if applicable.
-- For Transport: estimate one-way fare to/from this location.
-- For Accommodation: estimate one night per-person cost.
-- Use your knowledge of this specific place's actual fees/rates.
-- Output ONLY a JSON object with this exact format, no markdown, no explanation:
-{"estimatedAmount": 350, "currency": "INR", "breakdown": "Entry ticket ₹200 + guide ₹50 + misc ₹100 buffer", "confidence": "medium"}`
+Return ONLY valid JSON. No markdown, no explanation. Format:
+{
+  "placeType": "budget Udupi breakfast joint",
+  "items": [
+    { "name": "Masala Dosa", "price": 45 },
+    { "name": "Filter Coffee", "price": 15 },
+    { "name": "Misc / Buffer", "price": 100 }
+  ],
+  "totalAmount": 160,
+  "currency": "INR",
+  "confidence": "high"
+}`
+      : `Give me an itemized cost estimate for visiting "${placeName}" in ${destination} for ONE person.
+Context: "${description}"
+Category: ${tag}
+
+Think carefully:
+1. What is the actual entry fee / fare / rate for this specific place?
+2. Break it down into real line items (ticket, guide, transport fare, etc).
+3. Add ₹100 as a buffer.
+
+Return ONLY valid JSON. No markdown, no explanation. Format:
+{
+  "placeType": "historical monument",
+  "items": [
+    { "name": "Entry Ticket", "price": 50 },
+    { "name": "Audio Guide", "price": 30 },
+    { "name": "Misc / Buffer", "price": 100 }
+  ],
+  "totalAmount": 180,
+  "currency": "INR",
+  "confidence": "high"
+}`
 
     const body = {
       model: 'deepseek/deepseek-chat',
@@ -47,8 +70,8 @@ Instructions:
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      max_tokens: 200,
-      temperature: 0.1 // Very low — we want factual, deterministic pricing
+      max_tokens: 300,
+      temperature: 0.1
     }
 
     const res = await axios.post('https://openrouter.ai/api/v1/chat/completions', body, {
@@ -60,37 +83,37 @@ Instructions:
     })
 
     const raw = res.data?.choices?.[0]?.message?.content || ''
-    // Strip any accidental markdown code fences
     const jsonText = raw.replace(/^```(?:json)?\s*/i, '').replace(/```$/i, '').trim()
 
-    let parsed: { estimatedAmount: number; currency: string; breakdown: string; confidence: string }
+    let parsed: {
+      placeType: string
+      items: { name: string; price: number }[]
+      totalAmount: number
+      currency: string
+      confidence: string
+    }
+
     try {
       parsed = JSON.parse(jsonText)
     } catch {
-      // If AI didn't return valid JSON, try to extract a number
-      const match = raw.match(/\d{2,5}/)
-      parsed = {
-        estimatedAmount: match ? parseInt(match[0]) : 0,
-        currency: 'INR',
-        breakdown: raw.slice(0, 120),
-        confidence: 'low'
-      }
+      return NextResponse.json({ ok: false, error: 'Could not parse AI response' }, { status: 500 })
     }
 
-    // Ensure ₹100 buffer is always applied
-    const BUFFER = 100
-    const finalAmount = (parsed.estimatedAmount || 0) + BUFFER
+    // Recalculate total from items to ensure correctness
+    const recalcTotal = parsed.items?.reduce((sum, item) => sum + (item.price || 0), 0) ?? parsed.totalAmount
 
     return NextResponse.json({
       ok: true,
-      estimatedAmount: finalAmount,
+      placeType: parsed.placeType || '',
+      items: parsed.items || [],
+      totalAmount: recalcTotal,
       currency: parsed.currency || 'INR',
-      breakdown: parsed.breakdown || '',
-      bufferApplied: BUFFER,
-      confidence: parsed.confidence || 'medium'
+      confidence: parsed.confidence || 'medium',
+      bufferApplied: 100
     }, {
       headers: { 'Cache-Control': 'no-store' }
     })
+
   } catch (err: any) {
     console.error('[estimate-cost]', err?.message)
     return NextResponse.json({ ok: false, error: err?.message || 'estimation failed' }, { status: 500 })
