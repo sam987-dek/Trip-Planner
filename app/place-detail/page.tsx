@@ -13,19 +13,17 @@ interface TagConfig {
   heroBg: string
   emoji: string
   label: string
-  // Rough % of daily budget for this type
-  budgetShare: number
 }
 
 const TAG_STYLES: Record<TagKey, TagConfig> = {
-  Breakfast:     { bg: 'bg-orange-100/80 dark:bg-orange-950/50', text: 'text-orange-700 dark:text-orange-300', border: 'border-orange-200 dark:border-orange-700/40', heroBg: 'from-orange-900/70',    emoji: '🍳', label: 'Breakfast',     budgetShare: 0.12 },
-  Lunch:         { bg: 'bg-yellow-100/80 dark:bg-yellow-950/50', text: 'text-yellow-700 dark:text-yellow-300', border: 'border-yellow-200 dark:border-yellow-700/40', heroBg: 'from-yellow-900/70',    emoji: '🍱', label: 'Lunch',         budgetShare: 0.18 },
-  Dinner:        { bg: 'bg-red-100/80 dark:bg-red-950/50',       text: 'text-red-700 dark:text-red-300',       border: 'border-red-200 dark:border-red-700/40',       heroBg: 'from-red-900/70',       emoji: '🍽️', label: 'Dinner',        budgetShare: 0.22 },
-  Snack:         { bg: 'bg-pink-100/80 dark:bg-pink-950/50',     text: 'text-pink-700 dark:text-pink-300',     border: 'border-pink-200 dark:border-pink-700/40',     heroBg: 'from-pink-900/70',      emoji: '🧁', label: 'Snack / Tea',   budgetShare: 0.07 },
-  Activity:      { bg: 'bg-sky-100/80 dark:bg-sky-950/50',       text: 'text-sky-700 dark:text-sky-300',       border: 'border-sky-200 dark:border-sky-700/40',       heroBg: 'from-sky-900/70',       emoji: '🎯', label: 'Activity / Explore', budgetShare: 0.20 },
-  Transport:     { bg: 'bg-purple-100/80 dark:bg-purple-950/50', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-700/40', heroBg: 'from-purple-900/70',    emoji: '🚌', label: 'Transport',     budgetShare: 0.10 },
-  Accommodation: { bg: 'bg-emerald-100/80 dark:bg-emerald-950/50', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-700/40', heroBg: 'from-emerald-900/70', emoji: '🏨', label: 'Accommodation', budgetShare: 0.25 },
-  Default:       { bg: 'bg-slate-100/80 dark:bg-slate-800/50',   text: 'text-slate-600 dark:text-slate-300',   border: 'border-slate-200 dark:border-slate-700/40',   heroBg: 'from-slate-900/70',     emoji: '📍', label: 'Stop',          budgetShare: 0.10 },
+  Breakfast:     { bg: 'bg-orange-100/80 dark:bg-orange-950/50', text: 'text-orange-700 dark:text-orange-300', border: 'border-orange-200 dark:border-orange-700/40', heroBg: 'from-orange-900/70',    emoji: '🍳', label: 'Breakfast'     },
+  Lunch:         { bg: 'bg-yellow-100/80 dark:bg-yellow-950/50', text: 'text-yellow-700 dark:text-yellow-300', border: 'border-yellow-200 dark:border-yellow-700/40', heroBg: 'from-yellow-900/70',    emoji: '🍱', label: 'Lunch'         },
+  Dinner:        { bg: 'bg-red-100/80 dark:bg-red-950/50',       text: 'text-red-700 dark:text-red-300',       border: 'border-red-200 dark:border-red-700/40',       heroBg: 'from-red-900/70',       emoji: '🍽️', label: 'Dinner'        },
+  Snack:         { bg: 'bg-pink-100/80 dark:bg-pink-950/50',     text: 'text-pink-700 dark:text-pink-300',     border: 'border-pink-200 dark:border-pink-700/40',     heroBg: 'from-pink-900/70',      emoji: '🧁', label: 'Snack / Tea'   },
+  Activity:      { bg: 'bg-sky-100/80 dark:bg-sky-950/50',       text: 'text-sky-700 dark:text-sky-300',       border: 'border-sky-200 dark:border-sky-700/40',       heroBg: 'from-sky-900/70',       emoji: '🎯', label: 'Activity'      },
+  Transport:     { bg: 'bg-purple-100/80 dark:bg-purple-950/50', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-700/40', heroBg: 'from-purple-900/70',    emoji: '🚌', label: 'Transport'     },
+  Accommodation: { bg: 'bg-emerald-100/80 dark:bg-emerald-950/50', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-700/40', heroBg: 'from-emerald-900/70', emoji: '🏨', label: 'Accommodation' },
+  Default:       { bg: 'bg-slate-100/80 dark:bg-slate-800/50',   text: 'text-slate-600 dark:text-slate-300',   border: 'border-slate-200 dark:border-slate-700/40',   heroBg: 'from-slate-900/70',     emoji: '📍', label: 'Stop'          },
 }
 
 function getTagConfig(tag: string): TagConfig {
@@ -89,33 +87,23 @@ function parseActivityText(activityText: string) {
   }
 }
 
-// Parse a budget string like "₹10000", "$500", "10000", "USD 500" → number
-function parseBudgetAmount(budgetStr: string): number | null {
-  if (!budgetStr) return null
-  const cleaned = budgetStr.replace(/[₹$€£¥,\s]/g, '').replace(/[^\d.]/g, '')
-  const num = parseFloat(cleaned)
-  return isNaN(num) ? null : num
-}
-
-function formatCurrency(amount: number, budgetStr: string): string {
-  const symbol = budgetStr.match(/[₹$€£¥]/) ? budgetStr.match(/[₹$€£¥]/)![0] : '₹'
-  return `${symbol}${Math.round(amount).toLocaleString('en-IN')}`
-}
-
 function getReachAdvice(title: string, destination: string, mood: string) {
   const destinationName = destination.split(',')[0].trim()
   let baseAdvice = `To reach ${title} in ${destinationName}, standard transport options are available. `
-  if (mood === 'relaxed') {
-    return baseAdvice + `Since this is a relaxed trip, we highly recommend taking a local cab (such as Uber or Ola) or hiring a private auto-rickshaw directly to the entrance. This minimizes walking fatigue and keeps transit stress-free.`
-  } else if (mood === 'adventurous' || mood === 'outdoorsy') {
-    return baseAdvice + `For an active adventure, consider renting a scooter, taking a local bicycle ride, or walking if it's nearby. It gives you maximum flexibility to explore the alleys and enjoy the surrounding scenery.`
-  } else if (mood === 'romantic') {
-    return baseAdvice + `We recommend booking a private air-conditioned taxi or a scenic auto-rickshaw ride for a comfortable, private journey together to the destination.`
-  } else if (mood === 'cultural') {
-    return baseAdvice + `To absorb the local culture, try taking public transit (such as local buses or metro) to the nearest stop, and then walk the last mile to explore historic streets.`
-  } else {
-    return baseAdvice + `Ridesharing apps, local cabs, or auto-rickshaws are the most efficient ways to travel. Plan ~15-20 minutes travel time depending on local traffic.`
-  }
+  if (mood === 'relaxed') return baseAdvice + `Since this is a relaxed trip, we highly recommend taking a local cab (such as Uber or Ola) or hiring a private auto-rickshaw directly to the entrance.`
+  if (mood === 'adventurous' || mood === 'outdoorsy') return baseAdvice + `For an active adventure, consider renting a scooter, taking a local bicycle ride, or walking if it's nearby.`
+  if (mood === 'romantic') return baseAdvice + `We recommend booking a private air-conditioned taxi or a scenic auto-rickshaw ride for a comfortable, private journey together.`
+  if (mood === 'cultural') return baseAdvice + `To absorb the local culture, try taking public transit (such as local buses or metro) to the nearest stop, and then walk the last mile.`
+  return baseAdvice + `Ridesharing apps, local cabs, or auto-rickshaws are the most efficient ways to travel. Plan ~15-20 minutes travel time.`
+}
+
+// ─── Cost Estimate Hook ───────────────────────────────────────────────────────
+interface CostEstimate {
+  estimatedAmount: number
+  currency: string
+  breakdown: string
+  bufferApplied: number
+  confidence: string
 }
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
@@ -157,12 +145,10 @@ function PlaceDetailCoverImage({ text, destination, tagConfig }: { text: string;
         <div className="h-full w-full animate-pulse bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800" />
       )}
       <div className={`absolute inset-0 bg-gradient-to-t ${tagConfig.heroBg} via-slate-950/40 to-transparent`} />
-
       <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 z-10 space-y-3">
         <Link href="/ai-results" className="absolute top-6 left-6 inline-flex items-center gap-2 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md px-4 py-2 text-xs font-semibold border border-white/15 transition duration-200">
           ← Back to Itinerary
         </Link>
-        {/* Category Badge */}
         <span className={`inline-flex max-w-max items-center gap-2 rounded-full ${tagConfig.bg} ${tagConfig.text} border ${tagConfig.border} px-4 py-1.5 text-xs font-bold backdrop-blur-sm uppercase tracking-widest shadow-lg`}>
           {tagConfig.emoji} {tagConfig.label}
         </span>
@@ -198,6 +184,81 @@ function PlaceThumbnail({ text, destination }: { text: string; destination: stri
     <img src={imageUrl} alt={text} className="h-full w-full object-cover" />
   ) : (
     <div className="h-full w-full bg-slate-300 dark:bg-slate-800 animate-pulse" />
+  )
+}
+
+// ─── Cost Estimate Card ───────────────────────────────────────────────────────
+function CostEstimateCard({
+  placeName, description, destination, tag, tagConfig
+}: {
+  placeName: string; description: string; destination: string; tag: string; tagConfig: TagConfig
+}) {
+  const [estimate, setEstimate] = useState<CostEstimate | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!placeName || !destination) return
+    setEstimate(null)
+    setError('')
+    setLoading(true)
+
+    fetch('/api/estimate-cost', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ placeName, description, destination, tag })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok) setEstimate(data)
+        else setError(data.error || 'Could not estimate cost')
+      })
+      .catch(() => setError('Could not estimate cost'))
+      .finally(() => setLoading(false))
+  }, [placeName, destination, tag, description])
+
+  const confidenceColor = estimate?.confidence === 'high' ? 'text-emerald-500' : estimate?.confidence === 'medium' ? 'text-yellow-500' : 'text-slate-400'
+
+  return (
+    <div className={`rounded-2xl border ${tagConfig.border} ${tagConfig.bg} p-5 space-y-3`}>
+      <div className="flex items-center justify-between">
+        <h3 className={`text-xs font-bold uppercase tracking-wider ${tagConfig.text}`}>
+          {tagConfig.emoji} Estimated Cost — Real Price Check
+        </h3>
+        {estimate && (
+          <span className={`text-[10px] font-bold uppercase ${confidenceColor}`}>
+            {estimate.confidence === 'high' ? '✅ High confidence' : estimate.confidence === 'medium' ? '⚡ Medium confidence' : '⚠️ Rough estimate'}
+          </span>
+        )}
+      </div>
+
+      {loading && (
+        <div className="flex items-center gap-3 py-2">
+          <div className="h-5 w-5 rounded-full border-2 border-current border-t-transparent animate-spin opacity-60" />
+          <span className="text-xs text-slate-500 dark:text-slate-400">Checking menu prices and fees…</span>
+        </div>
+      )}
+
+      {!loading && estimate && (
+        <>
+          <p className={`text-3xl font-extrabold tracking-tight ${tagConfig.text}`}>
+            ₹{estimate.estimatedAmount.toLocaleString('en-IN')}
+          </p>
+          {estimate.breakdown && (
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-5">
+              {estimate.breakdown}
+            </p>
+          )}
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 italic">
+            Includes ₹{estimate.bufferApplied} buffer for misc. expenses
+          </p>
+        </>
+      )}
+
+      {!loading && error && (
+        <p className="text-xs text-slate-400 dark:text-slate-500 italic">{error}</p>
+      )}
+    </div>
   )
 }
 
@@ -261,15 +322,10 @@ export default function PlaceDetail() {
 
   const reachAdvice = getReachAdvice(placeTitle, destination, mood)
 
-  // Budget estimate for this stop
-  const totalBudget = parseBudgetAmount(budget)
-  const stopDays = Math.ceil(dayActivities.length / 5) || 1
-  const estimatedCost = totalBudget ? totalBudget * tagConfig.budgetShare / stopDays : null
-
   return (
     <section className="space-y-8 pb-16">
 
-      {/* ─── Hero Header Banner with Category Color ─── */}
+      {/* ─── Hero ─── */}
       <PlaceDetailCoverImage text={placeTitle} destination={destination} tagConfig={tagConfig} />
 
       {/* ─── Quick Info Pills ─── */}
@@ -280,25 +336,20 @@ export default function PlaceDetail() {
         <span className="inline-flex items-center gap-2 rounded-full bg-slate-100/80 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700/40 px-4 py-2 text-sm font-semibold">
           🗓️ Stop {placeIndex + 1} of {dayActivities.length}
         </span>
-        {estimatedCost !== null && (
-          <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100/80 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700/40 px-4 py-2 text-sm font-bold shadow-sm">
-            💰 Est. {formatCurrency(estimatedCost, budget)}
-          </span>
-        )}
         {budget && (
           <span className="inline-flex items-center gap-2 rounded-full bg-sky-100/80 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-700/40 px-4 py-2 text-sm font-semibold">
-            🎒 Total Budget: {budget}
+            🎒 Trip Budget: {budget}
           </span>
         )}
       </div>
 
-      {/* ─── Creative Two-Column Layout ─── */}
+      {/* ─── Two-Column Layout ─── */}
       <div className="grid gap-8 lg:grid-cols-[1fr_380px] items-start">
 
-        {/* Left Column: Details & Directions */}
+        {/* Left Column */}
         <div className="space-y-8">
 
-          {/* About / Description Card */}
+          {/* About Card */}
           <div className="rounded-3xl border border-slate-200/60 bg-white p-8 shadow-md dark:border-slate-800/40 dark:bg-slate-950 space-y-5">
             <h2 className="text-xs uppercase tracking-[0.25em] font-bold text-slate-400 dark:text-slate-500">
               ℹ️ Spot Overview
@@ -310,23 +361,17 @@ export default function PlaceDetail() {
               {placeDescription}
             </p>
 
-            {/* Estimated cost breakdown for this type */}
-            {estimatedCost !== null && (
-              <div className={`mt-2 rounded-2xl ${tagConfig.bg} ${tagConfig.border} border p-4 space-y-2`}>
-                <h3 className={`text-xs font-bold uppercase tracking-wider ${tagConfig.text}`}>
-                  {tagConfig.emoji} Estimated Cost for This Stop
-                </h3>
-                <p className={`text-2xl font-bold ${tagConfig.text}`}>
-                  {formatCurrency(estimatedCost, budget)}
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Based on your total budget of <strong>{budget}</strong> — approximately {Math.round(tagConfig.budgetShare * 100)}% of daily budget allocated for {tagConfig.label.toLowerCase()} expenses.
-                </p>
-              </div>
-            )}
+            {/* ── Real Price Estimate ── */}
+            <CostEstimateCard
+              placeName={placeTitle}
+              description={placeDescription}
+              destination={destination}
+              tag={placeTag}
+              tagConfig={tagConfig}
+            />
           </div>
 
-          {/* Transport / How to Reach Card */}
+          {/* Transport Card */}
           <div className="rounded-3xl border border-slate-200/60 bg-white p-8 shadow-md dark:border-slate-800/40 dark:bg-slate-950 space-y-5">
             <div className="space-y-2">
               <h2 className="text-xs uppercase tracking-[0.25em] font-bold text-slate-400 dark:text-slate-500">
@@ -336,7 +381,6 @@ export default function PlaceDetail() {
                 {reachAdvice}
               </p>
             </div>
-
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <a
                 href={`https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=${encodeURIComponent(placeTitle + ', ' + destination)}&travelmode=driving&dir_action=navigate`}
@@ -351,16 +395,14 @@ export default function PlaceDetail() {
               </Link>
             </div>
           </div>
-
         </div>
 
-        {/* Right Column: Location Map + Budget Breakdown */}
+        {/* Right Column: Map */}
         <div className="space-y-6">
           <div className="rounded-[2rem] border border-slate-200/60 bg-white p-6 shadow-lg dark:border-slate-800/40 dark:bg-slate-950 space-y-4">
             <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-slate-400 dark:text-slate-500">
               📍 Interactive Map Location
             </h3>
-
             <div className="relative group cursor-pointer overflow-hidden rounded-2xl border border-slate-200/60 dark:border-slate-800 aspect-[4/3] bg-slate-100 dark:bg-slate-900 shadow-inner">
               <iframe
                 src={`https://maps.google.com/maps?q=${encodeURIComponent(placeTitle + ', ' + destination)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
@@ -383,43 +425,11 @@ export default function PlaceDetail() {
                 </span>
               </a>
             </div>
-
             <div className="text-[11px] text-slate-500 dark:text-slate-450 leading-relaxed text-center italic">
               Map centered on {placeTitle}, {destination.split(',')[0]}
             </div>
           </div>
-
-          {/* Budget breakdown card */}
-          {totalBudget !== null && (
-            <div className="rounded-[2rem] border border-slate-200/60 bg-white p-6 shadow-lg dark:border-slate-800/40 dark:bg-slate-950 space-y-4">
-              <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-slate-400 dark:text-slate-500">
-                💰 Budget Allocation Guide
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Based on total budget of <strong className="text-slate-700 dark:text-slate-200">{budget}</strong></p>
-              <ul className="space-y-2.5">
-                {(Object.entries(TAG_STYLES) as [TagKey, TagConfig][])
-                  .filter(([key]) => key !== 'Default')
-                  .map(([key, cfg]) => {
-                    const amt = totalBudget * cfg.budgetShare
-                    const isActive = key === (placeTag as TagKey)
-                    return (
-                      <li key={key} className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 transition ${isActive ? `${cfg.bg} ${cfg.border} border` : 'hover:bg-slate-50 dark:hover:bg-slate-900/40'}`}>
-                        <span className={`flex items-center gap-2 text-xs font-semibold ${isActive ? cfg.text : 'text-slate-600 dark:text-slate-400'}`}>
-                          <span>{cfg.emoji}</span>
-                          {cfg.label}
-                        </span>
-                        <span className={`text-xs font-bold ${isActive ? cfg.text : 'text-slate-500 dark:text-slate-400'}`}>
-                          {formatCurrency(amt, budget)}
-                        </span>
-                      </li>
-                    )
-                  })
-                }
-              </ul>
-            </div>
-          )}
         </div>
-
       </div>
 
       {/* ─── Bottom Timeline Slider ─── */}
@@ -433,7 +443,6 @@ export default function PlaceDetail() {
               Day Route
             </span>
           </div>
-
           <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-none">
             {dayActivities.map((rawAct, idx) => {
               const { title: otherTitle, tag: otherTag } = parseActivityText(rawAct)
@@ -459,11 +468,6 @@ export default function PlaceDetail() {
                     <h4 className={`text-xs font-bold truncate mt-0.5 ${isActive ? 'text-slate-950 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
                       {otherTitle}
                     </h4>
-                    {totalBudget !== null && (
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                        Est. {formatCurrency(totalBudget * otherConfig.budgetShare / Math.ceil(dayActivities.length / 5 || 1), budget)}
-                      </span>
-                    )}
                   </div>
                 </button>
               )
