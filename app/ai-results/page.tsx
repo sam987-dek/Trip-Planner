@@ -716,6 +716,19 @@ export default function AIResults() {
               {activeDay.activities.length > 0 ? (
                 activeDay.activities.map((act, index) => {
                   const { title, description, tag } = parseActivityText(act)
+                  
+                  // Color palette per tag
+                  const tagStyle: Record<string, { bg: string; text: string; border: string; emoji: string }> = {
+                    Breakfast: { bg: 'bg-orange-100/70 dark:bg-orange-950/40', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-200 dark:border-orange-800/50', emoji: '🍳' },
+                    Lunch:     { bg: 'bg-yellow-100/70 dark:bg-yellow-950/40', text: 'text-yellow-600 dark:text-yellow-400', border: 'border-yellow-200 dark:border-yellow-800/50', emoji: '🍱' },
+                    Dinner:    { bg: 'bg-red-100/70 dark:bg-red-950/40',    text: 'text-red-600 dark:text-red-400',    border: 'border-red-200 dark:border-red-800/50',    emoji: '🍽️' },
+                    Snack:     { bg: 'bg-pink-100/70 dark:bg-pink-950/40',   text: 'text-pink-600 dark:text-pink-400',  border: 'border-pink-200 dark:border-pink-800/50',  emoji: '🧁' },
+                    Activity:  { bg: 'bg-sky-100/70 dark:bg-sky-950/40',    text: 'text-sky-600 dark:text-sky-400',    border: 'border-sky-200 dark:border-sky-800/50',    emoji: '🎯' },
+                    Transport: { bg: 'bg-purple-100/70 dark:bg-purple-950/40', text: 'text-purple-600 dark:text-purple-400', border: 'border-purple-200 dark:border-purple-800/50', emoji: '🚌' },
+                    Accommodation: { bg: 'bg-emerald-100/70 dark:bg-emerald-950/40', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-800/50', emoji: '🏨' },
+                  }
+                  const style = (tag && tagStyle[tag]) ? tagStyle[tag] : { bg: 'bg-slate-100/70 dark:bg-slate-800/50', text: 'text-slate-600 dark:text-slate-400', border: 'border-slate-200 dark:border-slate-700/50', emoji: '📍' }
+
                   return (
                     <article
                       key={index}
@@ -724,6 +737,8 @@ export default function AIResults() {
                         sessionStorage.setItem('tripease_place_description', description)
                         sessionStorage.setItem('tripease_place_index', String(index))
                         sessionStorage.setItem('tripease_day_activities', JSON.stringify(activeDay.activities))
+                        sessionStorage.setItem('tripease_place_tag', tag || '')
+                        sessionStorage.setItem('tripease_budget', sessionStorage.getItem('tripease_budget') || '')
                         router.push('/place-detail')
                       }}
                       className="group overflow-hidden rounded-[2rem] border border-slate-200/60 bg-slate-50/40 dark:bg-slate-900/30 hover:bg-white dark:hover:bg-slate-950 dark:border-slate-800/40 p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md cursor-pointer"
@@ -731,8 +746,8 @@ export default function AIResults() {
                       <div className="grid gap-5 md:grid-cols-[200px_1fr] items-center">
                         <SuggestionImage text={title} destination={destination} />
                         <div className="space-y-2">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-sky-100/60 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 px-2.5 py-0.5 text-xs font-semibold">
-                            {tag ? `🍽️ ${tag}` : `📍 Stop ${index + 1}`}
+                          <span className={`inline-flex items-center gap-1.5 rounded-full ${style.bg} ${style.text} border ${style.border} px-3 py-1 text-xs font-bold`}>
+                            {style.emoji} {tag || `Stop ${index + 1}`}
                           </span>
                           <h4 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-sky-500 transition">
                             {title}
